@@ -531,9 +531,9 @@
 				OTHER_CPLUSPLUSFLAGS = (
 					"-I/usr/include/python2.7",
 					"-DLEOPARD",
-					"-DHAVE_CONFIG_H",
 					"$(OTHER_CPLUSPLUSFLAGS_QUOTED_FOR_TARGET_1)",
 					"$(OTHER_CPLUSPLUSFLAGS_QUOTED_FOR_TARGET_2)",
+					"-DHAVE_SYS_MMAN_H",
 				);
 				OTHER_CPLUSPLUSFLAGS_QUOTED_FOR_TARGET_1 = "-DSUNPINYIN_DATA_DIR=\\\"/Library/Input\\ Methods/SunPinyin.app/Contents/Resources\\\"";
 				OTHER_LDFLAGS = (
@@ -566,9 +566,9 @@
 				OTHER_CPLUSPLUSFLAGS = (
 					"-I/usr/include/python2.7",
 					"-DLEOPARD",
-					"-DHAVE_CONFIG_H",
 					"$(OTHER_CPLUSPLUSFLAGS_QUOTED_FOR_TARGET_1)",
 					"$(OTHER_CPLUSPLUSFLAGS_QUOTED_FOR_TARGET_2)",
+					"-DHAVE_SYS_MMAN_H",
 				);
 				OTHER_CPLUSPLUSFLAGS_QUOTED_FOR_TARGET_1 = "-DSUNPINYIN_DATA_DIR=\\\"/Library/Input\\ Methods/SunPinyin.app/Contents/Resources\\\"";
 				OTHER_LDFLAGS = (
