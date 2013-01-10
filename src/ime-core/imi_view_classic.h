@@ -43,6 +43,10 @@
 
 #include "imi_view.h"
 
+#if __APPLE__
+#include <dispatch/dispatch.h>
+#endif
+
 class CIMIClassicView : public CIMIView
 {
 public:
@@ -74,7 +78,9 @@ private:
     unsigned m_cursorFrIdx;
     unsigned m_candiFrIdx;
     unsigned m_candiPageFirst;
-
+#if __APPLE__
+    dispatch_queue_t m_workqueue;
+#endif
     CCandidateList m_uiCandidateList;
     CPreEditString m_uiPreeditString;
 
@@ -83,6 +89,9 @@ private:
     std::vector<std::pair<wstring, CCandidates> > m_tails;
 
     void _insert(unsigned keyvalue, unsigned& mask);
+#if __APPLE__
+    void _insert(unsigned keyvalue, unsigned &changeMasks, void(^complete_block)(void));
+#endif
     void _erase(bool backward, unsigned& mask);
 
     void _getCandidates();

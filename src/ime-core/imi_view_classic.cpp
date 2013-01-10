@@ -47,11 +47,17 @@
 CIMIClassicView::CIMIClassicView()
     : CIMIView(), m_cursorFrIdx(0), m_candiFrIdx(0),
       m_candiPageFirst(0)
+#if __APPLE__
+    , m_workqueue(dispatch_queue_create("com.sunpinyin.workq", 0))
+#endif
 {
 }
 
 CIMIClassicView::~CIMIClassicView()
 {
+#if __APPLE__
+    dispatch_release(m_workqueue);
+#endif
 }
 
 size_t CIMIClassicView::top_candidate_threshold = 5;
@@ -233,16 +239,31 @@ CIMIClassicView::onKeyEvent(const CKeyEvent& key)
         if (keyvalue > 0x60 && keyvalue < 0x7b) {
             /* islower(keyvalue) */
             changeMasks |= KEYEVENT_USED;
+#if !defined(__APPLE__)
             _insert(keyvalue, changeMasks);
+#else
+            _insert(keyvalue, changeMasks, ^{});
+#endif
         } else if (keyvalue > 0x20 && keyvalue < 0x7f) {
             /* isprint(keyvalue) && !isspace(keyvalue) */
             changeMasks |= KEYEVENT_USED;
             if (m_pIC->isEmpty()) {
+#if !defined(__APPLE__)
                 _insert(keyvalue, changeMasks);
                 _doCommit();
                 clearIC();
+#else
+                _insert(keyvalue, changeMasks, ^{
+                    _doCommit();
+                    clearIC();
+                });
+#endif
             } else {
+#if !defined(__APPLE__)
                 _insert(keyvalue, changeMasks);
+#else
+                _insert(keyvalue, changeMasks, ^{});
+#endif
             }
         } else if (keycode == IM_VK_BACK_SPACE || keycode == IM_VK_DELETE) {
             if (!m_pIC->isEmpty()) {
@@ -476,6 +497,35 @@ CIMIClassicView::_insert(unsigned keyvalue, unsigned &changeMasks)
 
     changeMasks |= PREEDIT_MASK | CANDIDATE_MASK;
 }
+
+#if __APPLE__
+void
+CIMIClassicView::_insert(unsigned keyvalue, unsigned &changeMasks, void (^complete_block)(void))
+{
+    changeMasks |= KEYEVENT_USED;
+    
+    if (m_pPySegmentor->getInputBuffer().size() >= MAX_LATTICE_LENGTH - 1){
+        complete_block();
+        return;
+    }
+    
+    if (m_cursorFrIdx == m_pIC->getLastFrIdx())
+        m_pPySegmentor->push(keyvalue);
+    else
+        m_pPySegmentor->insertAt(m_cursorFrIdx, keyvalue);
+    
+    m_cursorFrIdx++;
+    
+    
+    
+    changeMasks |= PREEDIT_MASK | CANDIDATE_MASK;
+    dispatch_async(m_workqueue, ^{
+        if (m_pIC->buildLattice(m_pPySegmentor))
+            _getCandidates();
+        complete_block();
+    });
+}
+#endif
 
 void
 CIMIClassicView::_erase(bool backward, unsigned &changeMasks)
